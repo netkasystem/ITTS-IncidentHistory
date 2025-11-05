@@ -1,7 +1,7 @@
 
 .vs/
-/MonthlyCallApiAssetReport/bin
-/MonthlyCallApiAssetReport/obj
+/IncidentHistory/bin/
+/IncidentHistory/obj/
 /obj/Debug
 /obj/Docker
 /bin/Debug

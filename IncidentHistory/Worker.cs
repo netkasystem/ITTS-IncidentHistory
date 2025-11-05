@@ -23,7 +23,11 @@ namespace IncidentHistory
         {
             while (!stoppingToken.IsCancellationRequested)
             {
-                TimeSpan TDlay = TimeSpan.FromDays(1);
+
+                var sql_detail = "select value from variables where name = 'incident_archive_interval_hr'";
+                string incident_archive_interval_hr = mySqlHelper.ExecuteScalar(sql_detail)?.ToString() ?? "24";
+
+                TimeSpan TDlay = TimeSpan.FromHours( Convert.ToInt16(incident_archive_interval_hr));
                 if (_logger.IsEnabled(LogLevel.Information))
                 {
                     _logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
@@ -78,8 +82,12 @@ namespace IncidentHistory
                 var LsAttachmentId = mySqlHelper.ExecuteQuery(sql);   
                 LsAttachmentIdStr = string.Join(",", LsAttachmentId.AsEnumerable().Select(x => x.Field<uint>("AttachmentId")).ToArray());
 
+                _logger.LogInformation("---> == Start archive incident closed {DayInterval} days ago >> move incident id : {lsIncidentId}", DayInterval,LsAttachmentIdStr);
+
+
 
                 // move incident
+                _logger.LogInformation("---> -- move to incident_history");
                 string sql_insert = "INSERT INTO incident_history SELECT * FROM incident WHERE case_status_id = 16  " +
                 "AND closed_date IS NOT NULL " +
                 "AND closed_date <> '0000-00-00 00:00:00' " +
@@ -87,7 +95,9 @@ namespace IncidentHistory
                 sql_insert = string.Format(sql_insert, DayInterval);
                 string insert = mySqlHelper.ExecuteNonQuery(sql_insert).ToString() ?? "";
 
+
                 // delete incident
+                _logger.LogInformation("---> -- delete from incident");
                 string sql_delete = "DELETE FROM incident WHERE case_status_id = 16  " +
                 "AND closed_date IS NOT NULL " +
                 "AND closed_date <> '0000-00-00 00:00:00' " +
@@ -95,12 +105,15 @@ namespace IncidentHistory
                 sql_delete = string.Format(sql_delete, DayInterval);
                 string detele = mySqlHelper.ExecuteNonQuery(sql_delete).ToString() ?? "";
 
+
                 // move case_log
+                _logger.LogInformation("---> -- move case_log to case_log_history");
                 sql_insert = "INSERT INTO case_log_history SELECT * FROM case_log WHERE case_id IN ({0})";
                 sql_insert = string.Format(sql_insert, LsCaseIdStr);
                 insert = mySqlHelper.ExecuteNonQuery(sql_insert).ToString() ?? "";
 
                 // delete case_log
+                _logger.LogInformation("---> -- delete from case_log");
                 sql_delete = "DELETE FROM case_log WHERE case_id IN ({0})";
                 sql_delete = string.Format(sql_delete, LsCaseIdStr);
                 detele = mySqlHelper.ExecuteNonQuery(sql_delete).ToString() ?? "";
@@ -109,29 +122,36 @@ namespace IncidentHistory
                 if (LsAttachmentIdStr != "")
                 {
                     // move case_attachment
+                    _logger.LogInformation("---> -- move case_attachment to case_attachment_history");
                     sql_insert = "INSERT INTO case_attachment_history SELECT * FROM case_attachment " +
                         "WHERE module_id = 1 AND case_id IN ({0})";
                     sql_insert = string.Format(sql_insert, LsCaseIdStr);
                     insert = mySqlHelper.ExecuteNonQuery(sql_insert).ToString() ?? "";
 
                     // move file
+                    _logger.LogInformation("---> -- move file to nsdx_file_attatchment_history");
                     sql_insert = "INSERT INTO nsdx_file_attatchment_history SELECT * FROM nsdx_file_attatchment " +
                         " WHERE attatchment_id IN({0})";
                     sql_insert = string.Format(sql_insert, LsAttachmentIdStr);
                     insert = mySqlHelper.ExecuteNonQuery(sql_insert).ToString() ?? "";
 
                     // delete file
+                    _logger.LogInformation("---> -- delete file from nsdx_file_attatchment");
                     sql_delete = "DELETE FROM nsdx_file_attatchment " +
                         " WHERE attatchment_id IN({0})";
                     sql_delete = string.Format(sql_delete, LsAttachmentIdStr);
                     detele = mySqlHelper.ExecuteNonQuery(sql_delete).ToString() ?? "";
 
                     // delete case_attachment
+                    _logger.LogInformation("---> -- delete from case_attachment");
                     sql_delete = "DELETE FROM case_attachment " +
                         "WHERE module_id = 1 AND case_id IN ({0})";
                     sql_delete = string.Format(sql_delete, LsCaseIdStr);
                     detele = mySqlHelper.ExecuteNonQuery(sql_delete).ToString() ?? "";
                 }
+
+                _logger.LogInformation("---> == Finish archive incident closed {DayInterval} days ago", DayInterval);
+
 
             }
             return true;

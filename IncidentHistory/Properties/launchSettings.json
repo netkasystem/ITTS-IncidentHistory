@@ -1,0 +1,20 @@
+{
+  "profiles": {
+    "IncidentHistory": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "DOTNET_ENVIRONMENT": "Development",
+        "NSDXConnectionString": "Server=10.44.84.17;Port=3306;Database=netkaquartz;User=nkssdsk;Password=Ay2!BGur8;TreatTinyAsBoolean=true;Convert Zero Datetime=True"
+      },
+      "dotnetRunMessages": true
+    },
+    "Container (Dockerfile)": {
+      "commandName": "Docker",
+      "environmentVariables": {
+        "DOTNET_ENVIRONMENT": "Development",
+        "NSDXConnectionString": "Server=10.44.84.17;Port=3306;Database=netkaquartz;User=nkssdsk;Password=Ay2!BGur8;TreatTinyAsBoolean=true;Convert Zero Datetime=True"
+      }
+    }
+  },
+  "$schema": "http://json.schemastore.org/launchsettings.json"
+}

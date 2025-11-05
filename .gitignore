@@ -1,7 +1,10 @@
 
 .vs/
 /IncidentHistory/bin/
-/IncidentHistory/obj/
+/IncidentHistory/obj/ 
+/IncidentHistory/obj/Debug
+/IncidentHistory/obj/Docker
+/IncidentHistory/bin/Debug 
 /obj/Debug
 /obj/Docker
 /bin/Debug
